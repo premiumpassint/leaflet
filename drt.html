@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="doc_title">스마트 로컬 트래블: 공주·세종 1박 2일 DRT 투어 패키지</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0c4627',
+                            primary: '#126b3e',
+                            accent: '#1abc9c',
+                            bg: '#f7fcf9',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style> 
+        .serif-title { font-family: 'Noto Serif KR', serif; }
+        .bg-rural-green { background-color: #2D4A3E; }
+
+        /* ===================================================
+        1. 모바일 우선 세팅 (디폴트: 부드러운 스와이프 슬라이드)
+        =================================================== */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden; /* 모바일 우측 탈출 방지 */
+            background-color: #e5e7eb;
+            font-family: 'Poppins', 'Noto Serif KR', sans-serif;
+            font-size: 14px;
+        }
+
+        .leaflet-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            overflow-y: auto;
+        }
+
+        .leaflet-container {
+            display: flex;
+            width: 100%;
+            height: 878px;
+            overflow: auto hidden;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 모바일 화면에서는 모든 패널이 화면 하나에 쏙 들어오도록 강제 제한 */
+        .panel {
+            flex: 0 0 100%; /* 100vw 대신 100%를 사용하여 스크롤바 왜곡 방지 */
+            width: 100%;
+            height: 100%;
+            scroll-snap-align: start;
+            box-sizing: border-box;
+            overflow: hidden;
+            background-color: #f3f4f6;
+        }
+
+        /* 지도 */
+        .map-container {
+            width: 100%;        /* 리플렛 지면 너비에 맞춤 */
+            height: 290px;      /* 화면에 보여주고 싶은 실제 지도 높이 */
+            overflow: hidden;   /* ★ 중요: 빠져나간 헤더를 잘라서 숨김 */
+            position: relative;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            position: absolute;
+            left: 0;
+            border: none;
+        }
+        .day1 iframe {
+            top: -47px; 
+            height: 350px;  
+        }
+        .day2 iframe {
+            top: -60px;
+            height: 366px; 
+        }
+
+        .spotimg.active {
+            
+            width: 50%;
+        }
+        
+        .timetag { font-size: 12px; }
+        h2 { font-size: 22px !important; }
+        /* ===================================================
+        2. 미디어 쿼리: PC 세팅 (769px 이상일 때)
+        =================================================== */
+        @media (min-width: 769px) {
+            .leaflet-wrapper {
+                padding: 50px;
+                overflow: auto;
+            }
+
+            .leaflet-container {
+                display: grid;
+                grid-template-columns: repeat(3, 414px); /* A4 3분할 황금비율 고정 414px*/
+                grid-template-rows: 878.22px 878.22px;
+                width: 1242px;
+                height: 1804px;
+                overflow: visible;
+                gap: 48px 0; 
+            }
+
+            .panel {
+                width: 100%;
+                flex: none;
+                overflow: hidden; /* PC에서는 인쇄물처럼 깔끔하게 자름 */
+            }
+
+            /* 레이아웃 순서 및 경계선 재조립 */
+            .p-notice  { order: 1; border-right: 1px dashed #cbd5e1; } 
+            .p-back    { order: 2; border-right: 1px dashed #cbd5e1; }
+            .p-cover   { order: 3; } 
+
+            .p-left   { order: 4; border-right: 1px dashed #cbd5e1; }
+            .p-center { order: 5; border-right: 1px dashed #cbd5e1; }
+            .p-right  { order: 6; }
+        }
+
+        /* ===================================================
+        러시아어(ru) 선택 시 전용 스타일 강제 교정
+        =================================================== */
+        .lang-ru h1, 
+        .lang-ru .p1_title, 
+        .lang-ru .p2_title {
+            font-size: 1.25rem !important; 
+            letter-spacing: -0.05em !important; /* 자간을 좁혀서 가로폭 확보 */
+            line-height: 1.1 !important;        /* 행간을 조여서 위아래 쳐짐 방지 */
+        }
+
+        /* 3. 코스 타임라인 등 밀림이 심한 내용물 구역 콤팩트화 */
+        .lang-ru .courses-desc {
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+        }
+
+        /* 4. 마진이나 패딩 때문에 아래로 넘치는 경우 여백을 유연하게 축소 */
+        .lang-ru .mt-3 {
+            margin-top: 0.5rem !important;
+        }
+        .lang-ru .p-8 {
+            padding: 1.25rem !important;
+        }
+        .lang-ru * {
+            line-height: 1 !important;
+        }
+        .lang-ru .w-65 {
+            width: 306px !important;
+        }
+        .lang-ru h4 {
+            margin-bottom:2px !important;
+        }
+
+        /* ===================================================
+        인쇄 전용 스타일 (@media print)
+        =================================================== */
+        @media print {
+            /* 1. 불필요한 UI 및 요소 숨기기 */
+            body > *:not(.leaflet-wrapper),
+            button, .fixed, nav, footer, script {
+                display: none !important;
+            }
+
+            /* 2. 배경색 및 이미지 강제 출력 */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-shadow: none !important;
+            }
+
+            /* 3. 인쇄 용지 설정 (A4 가로, 여백 제로) */
+            @page {
+                size: A4 landscape;
+                margin: 0; 
+            }
+
+            html, body {
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important; /* 인쇄 시 스크롤바 표시 방지 */
+                background: #fff !important;
+            }
+
+            /* 4. 핵심: 리플렛 전체 크기를 A4 용지 비율에 맞춰 강제 scale 축소 */
+            .leaflet-wrapper {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                
+                /* 원래 만들었던 PC 기준 전체 판형 크기 고정 */
+                width: 1242px !important;
+                height: 1756px !important; /* 878px(바깥면) + 878px(안쪽면) = 총 2장 높이 */
+                
+                /* 브라우저 인쇄 창 가로폭에 맞춰 자동 scale 압축 (css 함수 활용) */
+                transform: scale(calc(100vw / 1242)) !important;
+                transform-origin: top left !important;
+            }
+
+            /* 5. 3면씩 묶여있는 컨테이너 정렬 */
+            .leaflet-container {
+                display: grid !important;
+                grid-template-columns: repeat(3, 414px) !important;
+                grid-template-rows: 878px 878px !important;
+                width: 1242px !important;
+                height: 1756px !important;
+                overflow: hidden;
+            }
+
+            .panel {
+                display: block !important;
+                width: 414px !important;
+                height: 878px !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important; /* 내부에 넘치는 콘텐츠 강제 가둠 */
+            }
+
+            /* 순서 재배치 */
+            .p-notice    { order: 1 !important; border-right: 1px dashed #cbd5e1; } 
+            .p-back      { order: 2 !important; border-right: 1px dashed #cbd5e1; }
+            .p-cover     { order: 3 !important; page-break-after: always !important; } 
+            
+            .p-left   { order: 4 !important; border-right: 1px dashed #cbd5e1; }
+            .p-center { order: 5 !important; border-right: 1px dashed #cbd5e1; }
+            .p-right       { order: 6 !important; }
+
+            .justify-between {
+                display: flex !important;
+                width: 100% !important;
+            }
+            
+            /* 자식 요소들이 가질 수 있는 최소 너비를 확보해주거나 늘려줌 */
+            .justify-between > * {
+                flex-shrink: 0 !important;
+            }
+                          
+            .mt-3.w-full.h-110.bg-cover {
+                /* 인쇄 시에는 고정 높이를 풀고, 내용물에 맞추거나 적절한 높이로 축소 */
+                height: auto !important; 
+                min-height: 200px !important; /* 종이 안에서 넘치지 않을 정도의 안전한 높이 */
+                width: 100%;
+                margin-top: 0.5rem !important; /* mt-3 마진이 과도하면 줄임 */
+                padding: 10px;
+                background-size: cover;
+            }
+
+            /* 2. 그 아래에 가려졌거나 밀렸던 정중앙 flex 박스 복구 */
+            .flex.w-full.h-full.items-center.justify-center {
+                display: flex !important;
+                width: 100% !important;
+                height: auto !important; 
+                min-height: 60px;
+                align-items: center;
+                justify-content: center;
+                /* 혹시나 다음 장으로 밀리는 현상 방지 */
+                page-break-inside: avoid !important; 
+                flex: 1;
+            }
+            .panel.p-back::before {
+                display: block !important;
+                content: "" !important;
+                position: absolute !important;
+                inset: 0 !important;
+                z-index: 0 !important;
+                
+                /* 1. 실제 출력 엔진을 위한 배경 강제 주입 */
+                /* background-image: url('rural/patt1.png') !important; */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+
+                background-repeat: repeat !important;
+                background-size: 40px !important;
+                opacity: 1 !important; 
+                filter: opacity(0.3) !important; 
+            }
+        }
+    </style>
+</head>
+<body class="m-0 p-0 font-sans text-stone-700 bg-stone-200 antialiased">
+    <div class="[@media(hover:hover)]:hover:opacity-100 opacity-30 fixed bottom-4 right-7 bg-white shadow-md rounded-full p-1 z-50 flex gap-1 border border-gray-200">
+        <button onclick="switchLang('en')" id="btn-en" class="px-3 py-2 rounded-full text-xs font-semibold bg-emerald-700 text-white transition-all">EN</button>
+        <button onclick="switchLang('ko')" id="btn-ko" class="px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all">KO</button>
+        <button onclick="switchLang('zh')" id="btn-zh" class="px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all">ZH</button>
+        <button onclick="switchLang('ru')" id="btn-ru" class="px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all">RU</button>
+    </div>
+
+    <div class="leaflet-wrapper">
+        <div class="leaflet-container">
+            <div class="panel p-cover text-center text-white bg-[url('drt/main.png')] bg-cover"> 
+                <div class="bg-black/50 bg-blend-darken p-10 w-full h-full flex flex-col justify-between">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-gradient-to-r from-teal-400 to-emerald-500 text-white px-3 py-1 rounded-full font-bold mb-4 tracking-wider shadow-sm" data-key="hero.subtitle">스마트 로컬 챌린지 : 공주 · 세종</div>
+                        <h1 class="text-[35px] font-extrabold text-white mt-3.5 leading-tight tracking-tight drop-shadow-md" data-key="hero.title">On-go to the Future</h1>
+                        <p class="text-[18px] text-emerald-300 font-bold tracking-wider mt-1.5" data-key="hero.tagline">1박2일 DRT 여행</p>
+                    </div>
+                                        
+                    <div>
+                        <p class="text-emerald-100 opacity-90 leading-tight px-2" data-key="hero.desc">백제의 숨결이 살아있는 공주 역사 탐방과 감성 골목부터 스마트 미래 도시 세종의 옥상정원까지 수요응답형 교통(DRT)으로 끊김없이 잇는 여정</p>
+                        <div class="text-[10px] mt-5 text-teal-200 font-bold tracking-wide border-t border-emerald-700/50 pt-3">
+                            <span data-key="hero.badge1">이색 교통 수단 체험</span> | <span data-key="hero.badge2">테마 상품 코스 가이드</span>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+            
+            <!-- 안쪽면 좌 -->
+            <div class="panel p-left p-7 border-r border-dashed border-emerald-200 bg-[radial-gradient(#dbebe1_1.2px,transparent_1.2px)] [background-size:18px_18px]">
+                <h2 class="text-brand-primary font-bold mb-3 border-l-4 border-brand-accent pl-2.5 leading-tight" data-key="day1.title">DAY 1: 백제의 역사와 감성 골목</h2>
+                <p class="text-teal-600 font-bold mb-3 leading-none" data-key="day1.subtitle">전통 문화 유산과 좁은 골목의 로컬 정취 탐방</p>
+                
+                <div id="day1_section" class="[:is(.lang-ko,.lang-ru,.lang-zh)_&]:mt-6">
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative mb-4">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">10:30</span>
+                        <h3 class="font-bold text-stone-800 mt-1">공주역 출발 → 무령왕릉과 왕릉원</h3>
+                        <p class="text-stone-500 mt-1 leading-none">KTX 공주역에서 미팅 후 DRT를 호출하여 유네스코 세계문화유산 무령왕릉과 왕릉원 권역으로 빠르게 이동합니다.</p>
+                        <div class="w-full h-20 bg-white border border-stone-200 p-1 mt-1.5 shadow-sm rounded flex">
+                            <div class="w-24 h-full rounded bg-cover bg-center" style="background-image: url('https://ssoluck.com/uploads/2026/07/webp/images-1782885206758-701897886.webp');"></div>
+                            <div class="text-stone-600 font-bold ml-2.5 flex items-center leading-tight">무령왕릉과 왕릉원<br>고분군 전경</div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative mb-4">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">11:30</span>
+                        <h3 class="font-bold text-stone-800 mt-1">황새바위 성지</h3>
+                        <p class="text-stone-500 mt-1">조선 시대 천주교 신자들이 처형당한 순교 유적지에서 역사 해설투어를 진행합니다.</p>
+                    </div>
+                    
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative mb-4">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">14:00</span>
+                        <h3 class="font-bold text-stone-800 mt-1">공산성 성곽길 → 제민천 & 잠자리가 놀다간 골목</h3>
+                        <p class="text-stone-500 mt-1 leading-relaxed">공산성 성곽을 산책하며 금강 전경을 감상한 뒤, 제민천 하천변을 따라 자리 잡은 감성 가득한 한옥 카페 골목을 탐방합니다.</p>
+                    </div>
+                    
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">18:00</span>
+                        <h3 class="font-bold text-stone-800 mt-1">산성시장 → 공주한옥마을</h3>
+                        <p class="text-stone-500 mt-1 leading-relaxed">로컬 산성시장에서 알밤닭강정 등 석식을 즐긴 후 전통 온돌 구들을 갖춘 고즈넉한 공주한옥마을에서 첫날을 마무리합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel p-right p-7 bg-[radial-gradient(#dbebe1_1.2px,transparent_1.2px)] [background-size:18px_18px]">
+                <h2 class="text-brand-primary font-bold mb-3 border-l-4 border-brand-accent pl-2.5 leading-tight" data-key="day2.title">DAY 2: 미래 도시 세종과 힐링 로드</h2>
+                <p class="text-teal-600 font-bold mb-3 leading-none" data-key="day2.subtitle">스마트 아키텍처와 국내 최대 규모의 도심형 인공 호수공원의 조화</p>
+                
+                <div id="day2_section" class="[:is(.lang-ko,.lang-ru,.lang-zh)_&]:mt-6">
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative mb-4">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">10:00</span>
+                        <h3 class="font-bold text-stone-800 mt-1">정부세종청사 옥상정원 & 대통령기록관</h3>
+                        <p class="text-stone-500 mt-1 leading-relaxed">세종으로 이동하여 세계 최대 규모의 정부세종청사 옥상정원을 산책한 뒤, 모던한 건축미의 대통령기록관을 관람합니다.</p>
+                        <div class="spot_container">
+                            <div class="w-full h-20 bg-white border border-stone-200 p-1 mt-1.5 shadow-sm rounded flex">
+                                <div class="w-24 h-full rounded bg-cover bg-center" style="background-image: url('https://ssoluck.com/uploads/2026/07/webp/images-1782886069111-624376226.webp');"></div>
+                                <div class="text-stone-600 ml-2.5 flex flex-col justify-center">
+                                    <p class="font-bold">정부세종청사 옥상정원</p>
+                                    <p class="text-[13px]">기네스북 등재 "세계 최대규모의 옥상정원"</p>
+                                </div>
+                            </div>
+                            <div class="w-full h-20 bg-white border border-stone-200 p-1 mt-1.5 shadow-sm rounded flex">
+                                <div class="w-24 h-full rounded bg-cover bg-center" style="background-image: url('https://ssoluck.com/uploads/2026/07/webp/images-1782886130021-701480838.webp');"></div>
+                                <div class="text-stone-600 font-bold ml-2.5 flex items-center leading-tight">대통령기록관<br>스마트 랜드마크</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative mb-4">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">13:00</span>
+                        <h3 class="font-bold text-stone-800 mt-1">세종호수공원 & 카페45</h3>
+                        <p class="text-stone-500 mt-1 leading-relaxed">세종사랑맛집에서 점심 식사 후 도심 속 거대 녹지인 세종호수공원을 거닐고, 45층 초고층 타워 카페에서 세종시 전경을 한눈에 담습니다.</p>
+                    </div>
+                    
+                    <div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative">
+                        <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                        <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">15:00</span>
+                        <h3 class="font-bold text-stone-800 mt-1">이응다리 산책 → 오송역 복귀</h3>
+                        <p class="text-stone-500 mt-1 leading-relaxed">한글 "ㅇ(이응)"을 모티브로 한 세종의 랜드마크인 원형 금강보행교 이응다리의 스카이워크를 즐긴 뒤, 상시 대기 중인 광역 DRT 차량에 탑승하여 KTX 오송역으로 이동, 투어를 마칩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel p-center p-7 border-r border-dashed border-emerald-200 flex flex-col justify-between bg-[#f4fcf8]">
+                <div>
+                    <h2 class="text-brand-primary font-bold mb-2 border-l-4 border-brand-accent pl-2.5 leading-tight" data-key="map.title">트래블 지도</h2>
+                    <p class="text-stone-500 leading-tight" data-key="map.subtitle">공주 역사 지구와 세종 미래 도심을 하나의 DRT 플랫폼 스케줄로 묶어낸 실시간 대중교통 노선망입니다.</p>
+                    
+                    <div class="bg-white border border-emerald-200 rounded-xl relative mt-6 p-3 shadow-sm flex flex-col justify-between">
+                        <div class="map-container day1 rounded-lg border border-emerald-100">
+                            <iframe src="https://www.google.com/maps/d/embed?mid=1HGogNmKMxm5UnKxX_yRh9_BZk-bIyhY&ehbc=2E312F&noprof=1&z=14"></iframe>
+                        </div> 
+                        <div class="flex justify-center space-x-3 mt-3 text-stone-600">
+                        <span class="flex items-center">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#c2195b] mr-2"></span>
+                            <span class="text-xs" data-key="map.route1">1일차 동선 : 공주역 ~ 공주 일대 ~ 1박</span>
+                        </span>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-emerald-200 rounded-xl relative mt-6 p-3 shadow-sm flex flex-col">
+                        <div class="map-container day2 rounded-lg border border-emerald-100">
+                            <iframe src="https://www.google.com/maps/d/embed?mid=1ks2nnfgWtvcTGJaO95WMzUqCv3PoozQ&ehbc=2E312F&noprof=1&hl=en&z=13"></iframe>
+                        </div> 
+                        <div class="flex justify-center space-x-3 mt-3 text-stone-600">
+                            <span class="flex items-center">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#0688d1] mr-2"></span>
+                                <span class="text-xs" data-key="map.route2">2일차 동선 : 공주 ~ 세종 일대 ~ 오송역</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-[12px] text-[#96c6a7] text-center" data-key="map.note">* 세부 일정은 현지 사황에 따라 달라질 수 있습니다.</div>
+            </div>
+
+            <div class="panel p-notice p-7 flex flex-col justify-between border-r border-dashed border-emerald-200 bg-[radial-gradient(#dbebe1_1.2px,transparent_1.2px)] [background-size:18px_18px]">
+                <div>
+                    <h2 class="text-brand-primary font-bold mb-4 border-l-4 border-brand-accent pl-2.5 leading-tight tracking-tight" data-key="drt.title">DRT 이용 안내</h2>
+                    <p class="text-stone-500 mb-4 leading-tight" data-key="drt.desc">이동 시 수요응답형 DRT 플랫폼을 이용하여 주요 거점을 이동합니다. 본 상품 이용시에는 가이드가 차량을 호출하지만, 기본 DRT 이용에 대해 안내합니다.</p>
+                    
+                    <div class="bg-white p-3 rounded-lg mb-3 border-l-4 border-brand-accent shadow-sm">
+                        <div class="flex items-center mb-1">
+                            <span class="w-5 h-5 bg-gradient-to-br from-brand-accent to-brand-primary text-white font-bold rounded-full flex items-center justify-center mr-2">1</span>
+                            <strong class="text-stone-800" data-key="drt.step1.title">DRT 전용 셔클 앱 설치</strong>
+                        </div>
+                        <div class="w-full flex gap-10 justify-center mt-2">
+                            <div class="flex flex-col items-center w-auto">
+                                <div id="app_android_qrcode" class="w-[50px] h-[50px] cursor-pointer"></div>
+                                <span class="text-xs">android</span>
+                            </div>
+                            <div class="flex flex-col items-center w-auto">
+                                <div id="app_ios_qrcode" class="w-[50px] h-[50px] cursor-pointer"></div>
+                                <span class="text-xs">ios</span>
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-lg mb-3 border-l-4 border-brand-accent shadow-sm">
+                        <div class="flex items-center mb-1">
+                            <span class="w-5 h-5 bg-gradient-to-br from-brand-accent to-brand-primary text-white font-bold rounded-full flex items-center justify-center mr-2">2</span>
+                            <strong class="text-stone-800" data-key="drt.step2.title">지정 구역 차량 호출</strong>
+                        </div>
+                        <p class="text-stone-500 pl-7 leading-tight" data-key="drt.step2.desc">제공되는 QR 코드를 통해 연동된 모바일 앱 상에서 출발 및 도착 핀을 확인합니다.</p>
+                        <img class="mx-[auto] w-[40%] pt-1" src="drt/proc.png"><img>
+                    </div>
+                    
+                    <div class="bg-white p-3 rounded-lg mb-3 border-l-4 border-brand-accent shadow-sm">
+                        <div class="flex items-center mb-1">
+                            <span class="w-5 h-5 bg-gradient-to-br from-brand-accent to-brand-primary text-white font-bold rounded-full flex items-center justify-center mr-2">3</span>
+                            <strong class="text-stone-800" data-key="drt.step3.title">DRT 거점 탑승 대기</strong>
+                        </div>
+                        <p class="text-stone-500 pl-7 leading-tight" data-key="drt.step3.desc">호출 출발 위치에서 탑승 대기시간 확인 후 탑승 대기합니다. (평균 대기 10분 내외)</p>
+                        <img class="mx-[auto] w-[40%] pt-1" src="drt/proc1.png"><img>
+                    </div>
+                    
+                    <div class="bg-white p-3 rounded-lg mb-3 border-l-4 border-brand-accent shadow-sm">
+                        <div class="flex items-center mb-1">
+                            <span class="w-5 h-5 bg-gradient-to-br from-brand-accent to-brand-primary text-white font-bold rounded-full flex items-center justify-center mr-2">4</span>
+                            <strong class="text-stone-800" data-key="drt.step4.title">하차 안내 및 목적지 도착</strong>
+                        </div>
+                        <p class="text-stone-500 pl-7 leading-tight" data-key="drt.step4.desc">이동 경로 및 소요 시간 확인 가능하며, 목적지 도착하여 하차합니다. 미리 등록된 결제수단으로 자동 결제됩니다.</p>
+                        <img class="mx-[auto] w-[40%] pt-1" src="drt/proc2.png"><img>
+                    </div>
+                </div>
+                
+                <div class="bg-emerald-50 border-l-4 border-brand-primary p-2.5 rounded-r-md text-brand-dark">
+                    <strong data-key="drt.notice_title">💡 여행 전 확인사항 :</strong><br>
+                    <ul class="list-disc pl-5 space-y-1 text-base">
+                        <li data-key="drt.notice_item1">DRT는 매주 월, 화 휴무입니다.</li>
+                        <li data-key="drt.notice_item2">정부세종청사 옥상정원은 사전 예약제로 원하는 날짜에 예약이 불가할 수 있습니다. (7~8월 미운영)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel p-back p-7 flex flex-col justify-between border-r border-dashed border-emerald-200 bg-[#f4fcf8]">
+                <div>
+                    <h2 class="text-brand-primary font-bold mb-3 border-l-4 border-brand-accent pl-2.5 leading-tight tracking-tight" data-key="product.title">여행 상품 안내</h2>
+                    <p class="text-stone-500 leading-normal mb-3" data-key="product.desc">역사와 미래가 공존하는 충청권 핵심 연계 1박 2일 투어 패키지의 상세 정보 및 예약 전용 링크입니다.</p>
+                    
+                    <div class="text-[22px] text-[#f47704] font-extrabold text-center my-10 bg-rose-50 p-2 rounded-md border border-dashed border-rose-200">
+                         <p data-key="product.price">310,000원</p> <span class="text-[14px] font-normal text-stone-500" data-key="product.price_unit">/ 10명 출발 기준</span>
+                    </div>
+                    
+                    <div class="text-center py-2 mt-10">
+                        <div id="prod_qrcode" class="w-[200px] h-[200px] bg-white rounded-md p-5 mx-auto mb-2 shadow-md bg-cover cursor-pointer"></div>
+                        <div class="text-brand-dark" data-key="product.btn_booking">[ 상세 페이지 및 예약 ]</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="w-full max-w-2xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <tbody>
+                                <tr class="grid grid-cols-[1fr_4fr] border-b border-gray-200">
+                                    <th class="w-[74px] break-all flex items-start bg-emerald-50 p-5 text-lg font-bold text-emerald-900" data-key="product.includes_title">
+                                    포함사항
+                                    </th>
+                                    <td class="p-5 text-gray-700">
+                                    <ul class="list-disc pl-5 space-y-1 text-base">
+                                        <li data-key="product.inc1">DRT 교통비</li>
+                                        <li data-key="product.inc2">입장/체험비</li>
+                                        <li data-key="product.inc3">공주한옥마을 1박(4인1실)</li>
+                                        <li data-key="product.inc4">식사 4회(조식 포함)</li>
+                                        <li data-key="product.inc5">여행자보험, 가이드</li>
+                                    </ul>
+                                    </td>
+                                </tr>
+
+                                <tr class="grid grid-cols-[1fr_4fr]">
+                                    <th class="w-[74px] break-all flex items-start bg-emerald-50 p-5 text-lg font-bold text-emerald-900" data-key="product.notes_title">
+                                    유의사항
+                                    </th>
+                                    <td class="p-5 text-gray-700">
+                                    <ul class="list-disc pl-5 space-y-1 text-base">
+                                        <li data-key="product.note1">2일차 세종 일정의 원활한 이동을 위해 개인 캐리어는 오송역에 개별 보관이 필요할 수 있습니다.</li>
+                                        <li data-key="product.note2">취소 규정: QR 상품 상세페이지 참조</li>
+                                    </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-[12px] mt-3 text-[#96c6a7] text-center" data-key="product.contact">
+                        상품 및 예약 문의: ssoluck@tothepp.com
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+    </div>
+
+    <div class="focusImg hidden items-center justify-center absolute left-0 top-0 w-full h-full bg-[rgba(0,0,0,0.7)]" onclick="this.style.display = 'none';"></div> 
+
+    <script>
+        const i18nData = {
+            en: {
+                doc_title: "Smart Local Travel: Gongju & Sejong 2D1N DRT Tour Package",
+                hero: {
+                    subtitle: "Smart Local Move",
+                    title: "On-go to the Future",
+                    tagline: "Gongju · Sejong 2D1N DRT Travel",
+                    desc: "A seamless journey connecting Baekje's history in Gongju to the smart future city of Sejong via Demand Responsive Transport (DRT).",
+                    badge1: "Experience Unique Mobility",
+                    badge2: "Themed Course Guide"
+                },
+                drt: {
+                    title: "DRT User Guide",
+                    desc: "Travel between key points using the DRT platform. The guide will call vehicles during the tour.",
+                    step1: { title: "Install Shucle DRT App" },
+                    step2: { title: "Call Vehicle in Designated Area", desc: "Check departure/arrival pins via the linked app using the provided QR code." },
+                    step3: { title: "Wait at DRT Station", desc: "Check estimated arrival time and wait (Avg. wait < 10 mins)." },
+                    step4: { title: "Drop-off & Arrival", desc: "Check route and duration. Payment is automatically processed via registered method." },
+                    notice_title: "Before You Travel",
+                    notice_item1: "DRT is closed every Monday and Tuesday.",
+                    notice_item2: "Sejong Government Complex Rooftop Garden requires advance reservation (Closed Jul-Aug)."
+                },
+                product: {
+                    title: "Tour Package Details",
+                    desc: "Detailed information and booking link for the 2D1N tour package connecting history and future.",
+                    price: "310,000 KRW",
+                    price_unit: "/ Min. 10 pax",
+                    btn_booking: "[ Details & Reservation ]",
+                    includes_title: "Incl.",
+                    inc1: "DRT Transport Fee",
+                    inc2: "Admission & Activity Fees",
+                    inc3: "1 Night at Gongju Hanok Village (4-person room)",
+                    inc4: "4 Meals (Including Breakfast)",
+                    inc5: "Travel Insurance & Tour Guide",
+                    notes_title: "NB",
+                    note1: "Luggage storage at Osong Station recommended for Day 2 schedule.",
+                    note2: "Cancellation Policy: See QR detail page",
+                    contact: "Inquiries & Booking : ssoluck@tothepp.com"
+                },
+                map: {
+                    title: "Travel Map",
+                    subtitle: "Real-time transport schedule connecting Gongju and Sejong via DRT platform.",
+                    route1: "Day 1 Route: Gongju Station ~ Gongju Area ~ Overnight Stay",
+                    route2: "Day 2 Route: Gongju ~ Around Sejong ~ Osong Station",
+                    note: "The itinerary may change due to local situations."
+                },
+                day1: {
+                    title: 'DAY 1: The History of Baekje and Emotional Alleys.',
+                    subtitle: 'Exploring Traditional Heritage and the Charm of Local Alleys',
+                    courses: [
+                        {
+                            time: "10:30", title: "Gongju Station → Muryeongneung Royal Tombs", desc: "Meet at KTX Gongju Station, then take a DRT to quickly reach the UNESCO World Heritage site of the Royal Tombs.", 
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885206758-701897886.webp', desc: ['Muryeongneung Royal Tombs', 'Panoramic View of the Baekje Ancient Tombs']}
+                            ]
+                        },
+                        {
+                            time: "11:30", title: "Hwangsaebawi Holy Site", desc: "Join a guided historical tour at this sacred heritage site, where numerous Catholic faithful were martyred during the Joseon Dynasty.",
+                            spots: []
+                        },
+                        {
+                            time: "14:00", title: "Gongsanseong Fortress Walk → Jemincheon Stream & Historic Alleys", desc: "After enjoying panoramic views of the Geumgang River from the fortress walls, we will tour the picturesque Hanok cafe district running alongside Jemincheon Stream.",
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885135435-921492144.webp', desc: ['Gongsanseong Fortress', 'UNESCO World Heritage Site']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523422164-955889790.webp', desc: ['Jemincheon Stream', 'A beautifully landscaped stream path, similar to Seoul\'s Cheonggyecheon.']}
+                            ]
+                        },
+                        {
+                            time: "18:00", title: "Gongju Sanseong Market → Gongju Hanok Village", desc: "Dine on local delicacies like Chestnut Dakgangjeong at Sanseong Market, and end the first day at the quiet Gongju Hanok Village featuring traditional Ondol heating.",
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523559876-151724569.webp', desc: ['Gongju Sanseong Market', 'A vibrant traditional market located in Gongju.']}
+                            ]
+                        }
+                    ],
+                },
+                day2: {
+                    title: 'DAY 2: Sejong, the City of the Future & Healing Road',
+                    subtitle: 'The harmony of smart architecture and the nation\'s largest urban artificial lake park.',
+                    courses: [
+                        {
+                            time: "10:00", 
+                            title: "Government Complex Sejong Rooftop Garden & Presidential Archives", 
+                            desc: "Travel to Sejong to stroll through the world's largest rooftop garden at the Government Complex, followed by a visit to the Presidential Archives, known for its modern architectural beauty.", 
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886069111-624376226.webp', desc: ['Government Complex Sejong Rooftop Garden', 'Guinness World Records-listed "World\'s Largest Rooftop Garden"']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886130021-701480838.webp', desc: ['Presidential Archives', 'A smart landmark tracing the history of Korea\'s past presidents']}
+                            ]
+                        },
+                        {
+                            time: "13:00", 
+                            title: "Sejong Lake Park & Cafe 45", 
+                            desc: "Take a relaxing walk through Sejong Lake Park, a massive green oasis in the heart of the city. Then, take in panoramic views of Sejong from a skyscraper cafe on the 45th floor.",
+                            spots : [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886302963-236373732.webp', desc: ['Sejong Lake Park', 'Korea\'s largest urban man-made lake park']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886358698-576011796.webp', desc: ['Cafe 45', 'Filming location of the hit Netflix series <The Glory>']}
+                            ]
+                        },
+                        {
+                            time: "15:00", 
+                            title: "Ieung Bridge Walk → Return to Osong Station", 
+                            desc: 'Enjoy the skywalk on Ieung Bridge, a circular pedestrian path across the Geumgang River inspired by the Korean alphabet consonant "ㅇ". Afterward, board a ready-and-waiting regional DRT vehicle to transfer to KTX Osong Station, concluding the tour.',
+                            spots : [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886420886-796567313.webp', desc: ['Ieung Bridge', 'Sejong city landmark and Korea\'s longest pedestrian-only bridge (1,446m circumference)']}
+                            ]
+                        }
+
+                    ],
+                },
+            },
+            ko: {
+                doc_title: "스마트 로컬 트래블: 공주·세종 1박 2일 DRT 투어 패키지",
+                hero: {
+                    subtitle: "스마트 로컬 이동",
+                    title: "전통을 품고 미래를 걷다 - 온고미래 ",
+                    tagline: "공주 · 세종 1박2일 DRT 여행",
+                    desc: "수요응답형 교통(DRT)으로 끊김없이 잇는 여정<br>백제의 숨결이 살아있는 공주 감성 골목부터<br>스마트 미래 도시 세종의 옥상정원까지",
+                    badge1: "이색 교통 수단 체험",
+                    badge2: "테마 상품 코스 가이드"
+                },
+                drt: {
+                    title: "DRT 이용 안내",
+                    desc: "이동 시 수요응답형 DRT 플랫폼을 이용하여 주요 거점을 이동합니다. 본 상품 이용시에는 가이드가 차량을 호출하지만, 기본 DRT 이용에 대해 안내합니다.",
+                    step1: { title: "DRT 전용 셔클 앱 설치" },
+                    step2: { title: "지정 구역 차량 호출", desc: "제공되는 QR 코드를 통해 연동된 모바일 앱 상에서 출발 및 도착 핀을 확인합니다." },
+                    step3: { title: "DRT 거점 탑승 대기", desc: "호출 출발 위치에서 탑승 대기시간 확인 후 탑승 대기합니다. (평균 대기 10분 내외)" },
+                    step4: { title: "하차 안내 및 목적지 도착", desc: "이동 경로 및 소요 시간 확인 가능하며, 목적지 도착하여 하차합니다. 미리 등록된 결제수단으로 자동 결제됩니다." },
+                    notice_title: "여행 전 확인사항",
+                    notice_item1: "DRT는 매주 월, 화 휴무입니다.",
+                    notice_item2: "정부세종청사 옥상정원은 사전 예약제로 원하는 날짜에 예약이 불가할 수 있습니다. (7~8월 미운영)"
+                },
+                product: {
+                    title: "여행 상품 안내",
+                    desc: "역사와 미래가 공존하는 충청권 핵심 연계 1박 2일 투어 패키지의 상세 정보 및 예약 전용 링크입니다.",
+                    price: "310,000원",
+                    price_unit: "/ 10명 출발 기준",
+                    btn_booking: "[ 상세 페이지 및 예약 ]",
+                    includes_title: "포함사항",
+                    inc1: "DRT 교통비",
+                    inc2: "입장/체험비",
+                    inc3: "공주한옥마을 1박 (4인1실)",
+                    inc4: "식사 4회 (조식 포함)",
+                    inc5: "여행자보험, 가이드",
+                    notes_title: "유의사항",
+                    note1: "2일차 세종 일정의 원활한 이동을 위해 개인 캐리어는 오송역에 개별 보관이 필요할 수 있습니다.",
+                    note2: "취소 규정: QR 상품 상세페이지 참조",
+                    contact: "상품 및 예약 문의 : ssoluck@tothepp.com"
+                },
+                map: {
+                    title: "트래블 맵",
+                    subtitle: "공주 역사 지구와 세종 미래 도심을 하나의 DRT 플랫폼 스케줄로 묶어낸 실시간 대중교통 노선망입니다.",
+                    route1: "1일차 동선 : 공주역 ~ 공주 일대 ~ 1박",
+                    route2: "2일차 동선 : 공주 ~ 세종 일대 ~ 오송역",
+                    note: "세부 일정은 현지 상황에 따라 달라질 수 있습니다."
+                },
+                day1: {
+                    title: 'DAY 1: 백제의 역사와 감성 골목',
+                    subtitle: '전통 문화 유산과 좁은 골목의 로컬 정취 탐방',
+                    courses: [
+                        {
+                            time: "10:30", title: "공주역 출발 → 무령왕릉과 왕릉원", desc: "KTX 공주역에서 미팅 후 DRT를 호출하여 유네스코 세계문화유산 무령왕릉과 왕릉원 권역으로 빠르게 이동합니다.", 
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885206758-701897886.webp', desc: ['무령왕릉과 왕릉원', '백제시대 유적 고분군 전경']}
+                            ]
+                        },
+                        {
+                            time: "11:30", title: "황새바위 성지", desc: "조선 시대 천주교 신자들이 처형당한 순교 유적지에서 역사 해설투어를 진행합니다.",
+                            spots: []
+                        },
+                        {
+                            time: "14:00", title: "공산성 성곽길 → 제민천 & 잠자리가 놀다간 골목", desc: "공산성 성곽을 산책하며 금강 전경을 감상한 뒤, 제민천 하천변을 따라 자리 잡은 감성 가득한 한옥 카페 골목을 탐방합니다.",
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885135435-921492144.webp', desc: ['공산성', '유네스코 세계문화유산']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523422164-955889790.webp', desc: ['제민천', '서울의 청계천과 같은 아름답게 조성된 하천길']}
+                            ]
+                        },
+                        {
+                            time: "18:00", title: "공주 산성시장 → 공주한옥마을", desc: "로컬지역 전통시장에서 알밤닭강정 등 석식을 즐긴 후 전통 온돌 구들을 갖춘 고즈넉한 공주한옥마을에서 첫날을 마무리합니다.",
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523559876-151724569.webp', desc: ['산성시장', '공주 전통시장']}
+                            ]
+                        }
+                    ],
+                },
+                day2: {
+                    title: 'DAY 2: 미래 도시 세종과 힐링 로드',
+                    subtitle: '스마트 아키텍처와 국내 최대 규모의 도심형 인공 호수공원의 조화',
+                    courses: [
+                        {
+                            time: "10:00", title: "정부세종청사 옥상정원 & 대통령기록관", desc: "세종으로 이동하여 세계 최대 규모의 정부세종청사 옥상정원을 산책한 뒤, 모던한 건축미의 대통령기록관을 관람합니다.", 
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886069111-624376226.webp', desc: ['정부세종청사 옥상정원', '기네스북 등재 "세계 최대규모의 옥상정원"']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886130021-701480838.webp', desc: ['대통령기록관', '역대 대통령의 발자취 스마트 랜드마크']}
+                            ]
+                        },
+                        {
+                            time: "13:00", title: "세종호수공원 & 카페45", desc: "도심 속 거대 녹지인 세종호수공원을 거닐고, 45층 초고층 타워 카페에서 세종시 전경을 한눈에 담습니다.",
+                            spots : [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886302963-236373732.webp', desc: ['세종호수공원', '국내 최대규모의 도심형 인공호수 공원']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886358698-576011796.webp', desc: ['카페45', '넷플릭스 <더글로리> 촬영지']}
+                            ]
+                        },
+                        {
+                            time: "15:00", title: "이응다리 산책 → 오송역 복귀", desc: '한글 "ㅇ(이응)"을 모티브로 한 세종의 랜드마크인 원형 금강보행교 이응다리의 스카이워크를 즐긴 뒤, 광역 DRT 차량에 탑승하여 KTX 오송역으로 이동, 투어를 마칩니다.',
+                            spots : [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886420886-796567313.webp', desc: ['이응다리', '세종시 랜드마크이자 국내에서 가장 긴 보행 전용 교량(둘레 1446m)']}
+                            ]
+                        }
+                    ],
+                },
+            },
+            zh: {
+                doc_title: "智慧Local Trip：公州·世宗 2天1夜 DRT 旅游套餐",
+                hero: {
+                    subtitle: "智慧Local Move",
+                    title: "拥抱传统，迈向未来 - 承前启后",
+                    tagline: "公州 · 世宗 2天1夜 DRT 之旅",
+                    desc: "通过需求响应型交通(DRT)无缝连接的旅程<br>从充满百济韵味的公州感性小巷<br>到智慧未来城市世宗的屋顶花园",
+                    badge1: "特色交通工具体验",
+                    badge2: "主题路线指南"
+                },
+                drt: {
+                    title: "DRT 使用指南",
+                    desc: "行程中使用 DRT 平台在主要景点间移动。本套餐将由导游代为叫车，以下为基本使用说明。",
+                    step1: { title: "下载 DRT 专属 Shucle App" },
+                    step2: { title: "指定区域叫车", desc: "通过提供的二维码登录 App，确认出发地与目的地。" },
+                    step3: { title: "在 DRT 站点等候", desc: "确认预计到达时间后在呼叫地点等候。（平均等候 10 分钟以内）" },
+                    step4: { title: "下车及到达目的地", desc: "可实时查看路线与所需时间。到达目的地后下车，费用将通过预设支付方式自动扣除。" },
+                    notice_title: "出行前注意事项",
+                    notice_item1: "DRT 每周一、二停运。",
+                    notice_item2: "政府世宗厅舍屋顶花园实行预约制，部分日期可能无法预约。（7~8月暂停开放）"
+                },
+                product: {
+                    title: "线路详情",
+                    desc: "连接历史与未来的忠清圈核心 2天1夜 游览套餐信息及预约链接。",
+                    price: "310,000韩元",
+                    price_unit: "/ 10人成团基准",
+                    btn_booking: "[ 详情及预约 ]",
+                    includes_title: "费用包含",
+                    inc1: "DRT 交通费",
+                    inc2: "门票及体验费",
+                    inc3: "公州韩屋村 1晚（4人1室）",
+                    inc4: "4餐（含早餐）",
+                    inc5: "旅游保险、导游",
+                    notes_title: "注意事项",
+                    note1: "为方便第2天世宗行程，建议将个人行李寄存在五松站。",
+                    note2: "退改规则：详见二维码商品页面",
+                    contact: "咨询及预约 : ssoluck@tothepp.com"
+                },
+                map: {
+                    title: "路线地图",
+                    subtitle: "通过 DRT 平台无缝串联公州历史区与世宗未来市中心的大众交通网络。",
+                    route1: "Day 1 路线 : 公州站 ~ 公州一带 ~ 住宿",
+                    route2: "Day 2 路线 : 公州 ~ 世宗一带 ~ 五松站",
+                    note: "具体行程可能根据当地实际情况有所调整。"
+                },
+                day1: {
+                    title: 'DAY 1: 百济历史与感性小巷',
+                    subtitle: '探索传统文化遗产与复古小巷风情',
+                    courses: [
+                        {
+                            time: "10:30", title: "公州站出发 → 武宁王陵与王陵园", desc: "在 KTX 公州站集合后乘坐 DRT，前往联合国教科文组织世界文化遗产——武宁王陵与王陵园。", 
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885206758-701897886.webp', desc: ['武宁王陵与王陵园', '百济时代古墓群全景']}
+                            ]
+                        },
+                        {
+                            time: "11:30", title: "黄鸟岩圣地", desc: "在朝鲜时代天主教徒殉道圣地，聆听历史讲解。",
+                            spots: []
+                        },
+                        {
+                            time: "14:00", title: "公山城城墙路 → 济民川与蜻蜓停留的小巷", desc: "漫步公山城城墙欣赏锦江风光，随后游览济民川畔充满文艺气息的韩屋咖啡街。",
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885135435-921492144.webp', desc: ['公山城', '联合国教科文组织世界文化遗产']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523422164-955889790.webp', desc: ['济民川', '宜人的城市溪流步道']}
+                            ]
+                        },
+                        {
+                            time: "18:00", title: "公州山城市场 → 公州韩屋村", desc: "在当地传统市场品尝炸栗子鸡块等晚餐，随后入住配备传统地暖的公州韩屋村，结束首日行程。",
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523559876-151724569.webp', desc: ['山城市场', '公州传统市场']}
+                            ]
+                        }
+                    ],
+                },
+                day2: {
+                    title: 'DAY 2: 未来城市世宗与疗愈之旅',
+                    subtitle: '现代智慧建筑与韩国最大城市人工湖公园的融合',
+                    courses: [
+                        {
+                            time: "10:00", title: "政府世宗厅舍屋顶花园 & 总统档案馆", desc: "前往世宗，漫步于世界最大的政府屋顶花园，随后参观具有现代建筑美感的总统档案馆。", 
+                            spots: [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886069111-624376226.webp', desc: ['政府世宗厅舍屋顶花园', '吉尼斯世界纪录“世界最大屋顶花园”']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886130021-701480838.webp', desc: ['总统档案馆', '展现历任总统足迹的智慧地标']}
+                            ]
+                        },
+                        {
+                            time: "13:00", title: "世宗湖水公园 & Cafe 45", desc: "游览城市绿洲世宗湖水公园，并在 45 层高空观景咖啡厅俯瞰世宗市全景。",
+                            spots : [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886302963-236373732.webp', desc: ['世宗湖水公园', '韩国最大的城市人工湖公园']},
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886358698-576011796.webp', desc: ['Cafe 45', '韩剧《黑暗荣耀》取景地']}
+                            ]
+                        },
+                        {
+                            time: "15:00", title: "이응大桥（이응 Bridge）散步 → 返回五松站", desc: '体验以韩文“ㅇ”为灵感设计的圆形步道桥，随后乘坐跨区域 DRT 前往 KTX 五松站，结束行程。',
+                            spots : [
+                                {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886420886-796567313.webp', desc: ['이응大桥', '世宗地标，韩国最长的行人专用桥（周长1446m）']}
+                            ]
+                        }
+                    ],
+                }
+            },
+            ru: {
+            doc_title: "Smart Local Travel: 2D1N DRT-тур в Гонджу и Седжон",
+            hero: {
+                subtitle: "Smart Local Move",
+                title: "Традиции и будущее: Путешествие во времени",
+                tagline: "Гонджу · Седжон 2D1N DRT-тур",
+                desc: "Удобный маршрут на транспорте по запросу (DRT)<br>От атмосферных улочек древней столицы Пэкче в Гонджу<br>До висячих садов умного города Седжон",
+                badge1: "Уникальный транспорт",
+                badge2: "Тематический гид"
+            },
+            drt: {
+                title: "Как пользоваться DRT",
+                desc: "Перемещение между локациями осуществляется через платформу DRT. Гид вызовет автомобиль, но ознакомьтесь с базовой инструкцией.",
+                step1: { title: "Установите приложение Shucle" },
+                step2: { title: "Вызов авто в зоне", desc: "Сканируйте QR-код и проверьте точки отправления и прибытия в приложении." },
+                step3: { title: "Ожидание на остановке", desc: "Проверьте время прибытия и ожидайте на точке (в среднем до 10 минут)." },
+                step4: { title: "Поездка и прибытие", desc: "Отслеживайте маршрут в реальном времени. Оплата списается автоматически с привязанной карты." },
+                notice_title: "Важная информация",
+                notice_item1: "DRT не работает по понедельникам и вторникам.",
+                notice_item2: "Сад на крыше комплекса Седжон требует бронирования (закрыт в июле и августе)."
+            },
+            product: {
+                title: "О туре",
+                desc: "Детали 2-дневного тура, объединяющего историю и будущее региона Чхунчхон, и ссылка на бронирование.",
+                price: "310 000 KRW",
+                price_unit: "/ на человека (группа от 10 чел.)",
+                btn_booking: "[ Подробнее и бронирование ]",
+                includes_title: "В стоимость входит",
+                inc1: "Проезд на DRT",
+                inc2: "Входные билеты и активности",
+                inc3: "1 ночь в деревне ханок в Гонджу (4 чел. в номере)",
+                inc4: "4 приема пищи (вкл. завтрак)",
+                inc5: "Страховка и гид",
+                notes_title: "Примечания",
+                note1: "Для удобства во 2-й день рекомендуется оставить багаж в камеры хранения на станции Осон.",
+                note2: "Правила отмены: см. на странице бронирования по QR-коду.",
+                contact: "Вопросы и бронирование: ssoluck@tothepp.com"
+            },
+            map: {
+                title: "Карта маршрута",
+                subtitle: "Единая транспортная сеть DRT, связывающая исторический Гонджу и футуристический Седжон.",
+                route1: "День 1: Станция Гонджу ~ Район Гонджу ~ Ночлег",
+                route2: "День 2: Гонджу ~ Район Седжон ~ Станция Осон",
+                note: "Маршрут может незначительно меняться в зависимости от обстоятельств."
+            },
+            day1: {
+                title: 'ДЕНЬ 1: История Пэкче и уютные улочки',
+                subtitle: 'Погружение в культурное наследие и атмосферу старого города',
+                courses: [
+                    {
+                        time: "10:30", title: "Отправление со станции Гонджу → Гробница короля Мунёна", desc: "Встреча на KTX Гонджу, поездка на DRT к объекту ЮНЕСКО — гробнице короля Мунёна.", 
+                        spots: [
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885206758-701897886.webp', desc: ['Гробница короля Мунёна', 'Королевские захоронения эпохи Пэкче']}
+                        ]
+                    },
+                    {
+                        time: "11:30", title: "Святое место Хвансебави", desc: "Экскурсия по историческому месту мученичества христиан эпохи Чосон.",
+                        spots: []
+                    },
+                    {
+                        time: "14:00", title: "Крепость 공산성 (Консансон) → Ручей Чеминчхон", desc: "Прогулка по Fortress Kongsan с видом на реку Кымган и посещение атмосферного квартала традиционных кафе.",
+                        spots: [
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782885135435-921492144.webp', desc: ['Крепость Консансон', 'Объект всемирного наследия ЮНЕСКО']},
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523422164-955889790.webp', desc: ['Ручей Чеминчхон', 'Живописная пешеходная зона вдоль реки']}
+                        ]
+                    },
+                    {
+                        time: "18:00", title: "Rынок Сансон → Деревня ханок в Гонджу", desc: "Ужин на местном рынке (курица в каштановом соусе) и отдых в традиционном доме ханок с системой ондоль.",
+                        spots: [
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1784523559876-151724569.webp', desc: ['Рынок Сансон', 'Традиционный рынок Гонджу']}
+                        ]
+                    }
+                ],
+            },
+            day2: {
+                title: 'ДЕНЬ 2: Футуристический Седжон и релакс',
+                subtitle: 'Гармония современной архитектуры и крупнейшего парка с искусственным озером',
+                courses: [
+                    {
+                        time: "10:00", title: "Сад на крыше комплекса Седжон & Президентский архив", desc: "Переезд в Седжон. Прогулка по самому большому саду на крыше и посещение Президентского архива.", 
+                        spots: [
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886069111-624376226.webp', desc: ['Сад на крыше правительственного комплекса', 'Внесен в Книгу рекордов Гиннесса']},
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886130021-701480838.webp', desc: ['Президентский архив', 'Современный символ истории президентов']}
+                        ]
+                    },
+                    {
+                        time: "13:00", title: "Озерный парк Седжон & Cafe 45", desc: "Прогулка по озерному парку и панорамный вид на город с кафе на 45-м этаже.",
+                        spots : [
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886302963-236373732.webp', desc: ['Озерный парк Седжон', 'Крупнейший искусственный озерный парк в Корее']},
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886358698-576011796.webp', desc: ['Cafe 45', 'Место съемок дорамы «Слава» (The Glory)']}
+                        ]
+                    },
+                    {
+                        time: "15:00", title: "Мост Иын (I-Eung) → Станция Осон", desc: 'Прогулка по пешеходному мосту в форме буквы «ㅇ» и отправление на DRT до станции KTX Осон.',
+                        spots : [
+                            {img: 'https://ssoluck.com/uploads/2026/07/webp/images-1782886420886-796567313.webp', desc: ['Мост Иын', 'Символ Седжона, самый длинный пешеходный мост (1446 м)']}
+                        ]
+                    }
+                ],
+            }
+        },
+        };
+
+        const qrcodes = [
+            {
+                id: "prod_qrcode",
+                url: 'https://ssoluck.com/product/detail/317',
+                color: 'black'
+            },
+            {
+                id: "app_android_qrcode",
+                url: 'https://play.google.com/store/apps/details?id=com.hyundai.airlab.shucle',
+                color: '#1abc9c'
+            },
+            {
+                id: "app_ios_qrcode",
+                url: 'https://apps.apple.com/us/app/%EC%85%94%ED%81%B4/id1499656614', 
+                color: '#1abc9c'
+            }
+        ];
+
+        qrcodes.forEach( o => {
+            var qrcode = new QRCode(o.id, {colorDark: o.color});
+            qrcode.makeCode(o.url); 
+            document.getElementById(o.id).onclick = function() {
+                window.open(o.url);
+            }
+        });
+
+        function insertCourse(targetId, data) {
+            let tourCourses = '';
+            data.forEach(function(o, i) {
+                tourCourses += `<div class="border-l-2 border-dashed border-brand-accent pl-3.5 relative mb-4">
+                    <span class="absolute left-[-6px] top-1 w-2.5 h-2.5 bg-brand-accent rounded-full ring-4 ring-white"></span>
+                    <span class="timetag bg-brand-accent text-white px-1.5 py-0.5 rounded font-bold">${o.time}</span>
+                    <h3 class="font-bold text-stone-800 mt-1 leading-none [:is(.lang-ko,.lang-ru,.lang-zh)_&]:text-[16px]">${o.title}</h3>
+                    <p class="text-[11px] text-stone-500 mt-2 mb-2 leading-tight [:is(.lang-ko,.lang-ru,.lang-zh)_&]:text-[13px]">${o.desc}</p>
+                    <div class="spot_container">
+                        ${o.spots ? addSpotblock(o.spots) : ''}
+                    </div>
+                </div>`;
+            });
+            document.getElementById(targetId).innerHTML = tourCourses;
+        }
+
+        /*
+         * 코스 내 관광지 이미지 블록 추가
+        */
+        function addSpotblock(data) { 
+            let tourSpots = ''; 
+            data.forEach(function(o, i) {
+                tourSpots += `<div class="w-full h-20 bg-white border border-stone-200 p-1.5 mt-1.5 shadow-sm rounded flex [:is(.lang-ko,.lang-ru,.lang-zh)_&]:mt-4">
+                    <div class="spotimg cursor-pointer w-24 h-full rounded bg-cover bg-center flex-none" style="background-image: url('${o.img}');"></div>
+                    <div class="text-stone-600 ml-2 p-1 flex flex-col justify-center leading-none flex-1">
+                        <p class="text-[12px] font-bold">${o.desc[0]}</p>
+                        <p class="text-[11px] mt-1">${o.desc[1]}</p>
+                    </div>
+                </div>`;
+            });
+            return tourSpots;
+        }
+
+        function switchLang(lang) {
+            document.querySelectorAll('[data-key]').forEach(element => {
+                const keyPath = element.getAttribute('data-key');
+                const value = keyPath.split('.').reduce((obj, key) => obj && obj[key], i18nData[lang]);
+                
+                if (value) {
+                element.innerHTML = value;
+                }
+            });
+
+            insertCourse('day1_section', i18nData[lang].day1.courses);
+            insertCourse('day2_section', i18nData[lang].day2.courses);
+
+            
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+            try {
+                const url = new URL(iframe.src);
+                url.searchParams.delete('hl'); // la 파라미터만 삭제
+                iframe.src = url.toString() + "&hl=" + lang;  // 변경된 주소 반영
+            } catch (e) {
+                console.error("올바르지 않은 URL 형식입니다.", e);
+            }
+            });
+
+            const allImages = document.querySelectorAll('.spotimg'); 
+            allImages.forEach((img) => {
+                const computedStyle = window.getComputedStyle(img);
+                const bgImageProperty = computedStyle.backgroundImage; 
+                const imageUrl = bgImageProperty.replace(/^url\((['"]?)(.*?)\1\)$/gi, '$2');
+
+                img.addEventListener("click", () => {
+                    const pop = document.querySelector('.focusImg');
+                    pop.innerHTML = `<img src="${imageUrl}"></img>`;
+                    pop.style.display = 'flex';
+                });
+            });
+            
+            // 토글 버튼 디자인 활성화/비활성화 처리
+            const btnEn = document.getElementById('btn-en');
+            const btnKo = document.getElementById('btn-ko');
+            const btnZh = document.getElementById('btn-zh');
+            const btnRu = document.getElementById('btn-ru');
+
+            if (lang === 'en') {
+                btnEn.className = "px-3 py-2 rounded-full text-xs font-semibold bg-emerald-700 text-white transition-all";
+                btnKo.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnZh.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnRu.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+            } else if(lang == 'zh') {
+                btnZh.className = "px-3 py-2 rounded-full text-xs font-semibold bg-emerald-700 text-white transition-all";
+                btnKo.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnEn.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnRu.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+            } else if(lang == 'ru') {
+                btnRu.className = "px-3 py-2 rounded-full text-xs font-semibold bg-emerald-700 text-white transition-all";
+                btnKo.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnEn.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnZh.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+            } else {
+                btnKo.className = "px-3 py-2 rounded-full text-xs font-semibold bg-emerald-700 text-white transition-all";
+                btnEn.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnZh.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+                btnRu.className = "px-3 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all";
+            }
+
+            document.documentElement.lang = lang;
+            const wrapper = document.querySelector('.leaflet-wrapper');
+            wrapper.classList.remove('lang-en', 'lang-zh', 'lang-ru', 'lang-ko');
+            wrapper.classList.add(`lang-${lang}`);
+        }
+
+        function setViewport() {
+            // 기존에 생성된 뷰포트 태그가 있다면 제거
+            const oldMeta = document.querySelector('meta[name="viewport"]');
+            if (oldMeta) oldMeta.remove();
+
+            const meta = document.createElement('meta');
+            meta.name = "viewport";
+
+            // 개발자 도구 모바일 뷰 또는 실제 모바일 화면 폭(768px 이하) 감지
+            if (window.innerWidth <= 768) {
+                // 화면을 강제로 414px 크기로 압축하여 비율 유지
+                meta.content = "width=100%, initial-scale=1.0, user-scalable=no";
+            } else {
+                // PC 화면에서는 정상 반응형 규격 적용
+                meta.content = "width=device-width, initial-scale=1.0";
+            }
+            document.getElementsByTagName('head')[0].appendChild(meta);
+        }
+
+        // 초기 실행
+        setViewport();
+        switchLang('en');
+    </script>
+</body>
+</html>
